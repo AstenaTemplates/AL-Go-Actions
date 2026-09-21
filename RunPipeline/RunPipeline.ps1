@@ -478,6 +478,8 @@ try {
         -accept_insiderEula `
         -pipelinename $workflowName `
         -containerName $containerName `
+        -reUseContainer: $settings.reUseContainer `
+        -keepContainer: $settings.keepContainer `
         -imageName $imageName `
         -bcAuthContext $authContext `
         -environment $environmentName `
