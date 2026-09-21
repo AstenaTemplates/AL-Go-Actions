@@ -1407,7 +1407,21 @@ function OptionallyConvertFromBase64 {
 }
 
 function GetContainerName([string] $project) {
-    "bc$($project -replace "[^a-z0-9\-]")$env:GITHUB_RUN_ID"
+    $runnerTag = "$env:RUNNER_NAME" -replace '[^a-zA-Z0-9]', ''
+    if (-not $runnerTag) {
+        # Fallback for GitHub-hosted runners, where reuse isn't relevant anyway
+        $runnerTag = "gh$env:GITHUB_RUN_ID"
+    }
+
+    $settings = ReadSettings -project $project -baseFolder $ENV:GITHUB_WORKSPACE -workflowName "CI/CD"
+    $repoVersion = [Version]$settings.repoVersion
+    $bcVersion = "BC$($repoVersion.Major)$($repoVersion.Minor)"
+
+    $containerName = "$runnerTag$bcVersion"
+    if ($containerName.Length -gt 15) {
+        throw "Container name '$containerName' exceeds 15 characters - shorten runner name or version"
+    }
+    $containerName
 }
 
 <#
