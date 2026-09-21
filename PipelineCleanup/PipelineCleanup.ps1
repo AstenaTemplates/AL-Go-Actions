@@ -3,6 +3,12 @@ Param(
     [string] $project = "."
 )
 
+$settings = ReadSettings -project $project -baseFolder $ENV:GITHUB_WORKSPACE -workflowName "CI/CD"
+if ([bool]$settings['keepContainer']) {
+    Write-Host "keepContainer is set - leaving container $containerName in place for reuse"
+    return
+}
+
 try {
     . (Join-Path -Path $PSScriptRoot -ChildPath "..\AL-Go-Helper.ps1" -Resolve)
     DownloadAndImportBcContainerHelper
