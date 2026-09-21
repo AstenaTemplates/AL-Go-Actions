@@ -473,8 +473,13 @@ try {
 
     $buildCredential = $null
     if ($buildContainerCredential) {
-        $cred = $buildContainerCredential | ConvertFrom-Json
-        $buildCredential = New-Object PSCredential($cred.username, (ConvertTo-SecureString $cred.password -AsPlainText -Force))
+        $u, $p = $buildContainerCredential -split ':', 2
+        if ($u -and $p) {
+            $buildCredential = New-Object PSCredential($u, (ConvertTo-SecureString $p -AsPlainText -Force))
+        }
+        else {
+            OutputWarning -message "BUILDCONTAINERCREDENTIAL must be '<username>:<password>' - ignoring"
+        }
     }
     
     $runAlPipelineParams["preprocessorsymbols"] = $settings.preprocessorSymbols
