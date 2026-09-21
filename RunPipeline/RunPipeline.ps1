@@ -92,7 +92,7 @@ try {
         return
     }
 
-    'licenseFileUrl','codeSignCertificateUrl','codeSignCertificatePassword','keyVaultCertificateUrl','keyVaultCertificatePassword','keyVaultClientId','gitHubPackagesContext','applicationInsightsConnectionString' | ForEach-Object {
+    'licenseFileUrl','codeSignCertificateUrl','codeSignCertificatePassword','keyVaultCertificateUrl','keyVaultCertificatePassword','keyVaultClientId','gitHubPackagesContext','applicationInsightsConnectionString','buildContainerCredential' | ForEach-Object {
         # Secrets might not be read during Pull Request runs
         if ($secrets.Keys -contains $_) {
             $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secrets."$_"))
@@ -470,6 +470,13 @@ try {
     if ($settings.preprocessorSymbols.Count -gt 0) {
         Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
     }
+
+    $buildCredential = $null
+    if ($buildContainerCredential) {
+        $cred = $buildContainerCredential | ConvertFrom-Json
+        $buildCredential = New-Object PSCredential($cred.username, (ConvertTo-SecureString $cred.password -AsPlainText -Force))
+    }
+    
     $runAlPipelineParams["preprocessorsymbols"] = $settings.preprocessorSymbols
     $runAlPipelineParams["features"] = $settings.features
 
@@ -478,8 +485,9 @@ try {
         -accept_insiderEula `
         -pipelinename $workflowName `
         -containerName $containerName `
-        -reUseContainer: $settings.reUseContainer `
-        -keepContainer: $settings.keepContainer `
+        -reUseContainer:([bool]$settings['reUseContainer']) `
+        -keepContainer:([bool]$settings['keepContainer']) `
+        -credential $buildCredential `
         -imageName $imageName `
         -bcAuthContext $authContext `
         -environment $environmentName `
