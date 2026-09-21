@@ -92,7 +92,7 @@ try {
         return
     }
 
-    'licenseFileUrl','codeSignCertificateUrl','codeSignCertificatePassword','keyVaultCertificateUrl','keyVaultCertificatePassword','keyVaultClientId','gitHubPackagesContext','applicationInsightsConnectionString','buildContainerCredential' | ForEach-Object {
+    'licenseFileUrl','codeSignCertificateUrl','codeSignCertificatePassword','keyVaultCertificateUrl','keyVaultCertificatePassword','keyVaultClientId','gitHubPackagesContext','applicationInsightsConnectionString' | ForEach-Object {
         # Secrets might not be read during Pull Request runs
         if ($secrets.Keys -contains $_) {
             $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secrets."$_"))
@@ -471,13 +471,23 @@ try {
         Write-Host "Adding Preprocessor symbols : $($settings.preprocessorSymbols -join ',')"
     }
 
+    'buildContainerCredential' | ForEach-Object {
+        # Secrets might not be read during Pull Request runs
+        if ($secrets.Keys -contains $_) {
+            $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secrets."$_"))
+        }
+        else {
+            $value = ""
+        }
+        Set-Variable -Name $_ -Value $value
+    }
+
     $buildCredential = $null
     if ($buildContainerCredential) {
         $u, $p = $buildContainerCredential -split ':', 2
         if ($u -and $p) {
             $buildCredential = New-Object PSCredential($u, (ConvertTo-SecureString $p -AsPlainText -Force))
-        }
-        else {
+        } else {
             OutputWarning -message "BUILDCONTAINERCREDENTIAL must be '<username>:<password>' - ignoring"
         }
     }
