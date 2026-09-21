@@ -1419,7 +1419,7 @@ function GetContainerName([string] $project) {
 
     $containerName = "$runnerTag$bcVersion"
     if ($containerName.Length -gt 15) {
-        throw "Container name '$containerName' exceeds 15 characters — shorten runner name or version"
+        throw "Container name '$containerName' exceeds 15 characters - shorten runner name or version"
     }
     $containerName
 }
